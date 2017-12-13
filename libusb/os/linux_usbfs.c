@@ -2218,11 +2218,16 @@ static int op_cancel_transfer(struct usbi_transfer *itransfer)
 		USBI_TRANSFER_TO_LIBUSB_TRANSFER(itransfer);
 	int r;
 
-	if (!tpriv->urbs)
+        void *urbs = tpriv->urbs;
+        if (transfer->type == LIBUSB_TRANSFER_TYPE_ISOCHRONOUS) {
+                urbs = tpriv->iso_urbs;
+        }
+
+	if (!urbs)
 		return LIBUSB_ERROR_NOT_FOUND;
 
 	r = discard_urbs(itransfer, 0, tpriv->num_urbs);
-	if (r != 0)
+	if (r != 0 && r != LIBUSB_ERROR_NOT_FOUND)
 		return r;
 
 	switch (transfer->type) {
